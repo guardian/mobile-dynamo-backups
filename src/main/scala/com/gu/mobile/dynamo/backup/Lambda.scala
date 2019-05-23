@@ -3,6 +3,7 @@ package com.gu.mobile.dynamo.backup
 import java.time.format.DateTimeFormatter
 import java.time.{LocalDate, LocalDateTime, ZoneId}
 import java.util.Date
+import java.util.concurrent.TimeUnit
 
 import com.amazonaws.auth.{AWSCredentialsProviderChain, DefaultAWSCredentialsProviderChain}
 import com.amazonaws.auth.profile.ProfileCredentialsProvider
@@ -41,17 +42,17 @@ object Lambda extends Logging {
      def maybeEmptyString2Option(s: String) = Option(s).filter(_.trim.isEmpty)
 
     //Because aws uses java.util.date!
-     def toUtilDate(localDate: LocalDate) : Date = {
-      Date.from(localDate.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant)
+     def toUtilDate(localDate: LocalDateTime) : Date = {
+      Date.from(localDate.atZone(ZoneId.systemDefault()).toInstant)
     }
 
-    def makeListBackupsRequest(tableName: String, now: LocalDate) = new ListBackupsRequest()
-      .withTimeRangeUpperBound(toUtilDate(now))
-      .withTimeRangeLowerBound(toUtilDate(now.minusDays(daysToBackup)))
+    def makeListBackupsRequest(tableName: String, now: LocalDateTime) = new ListBackupsRequest()
+      .withTimeRangeLowerBound(toUtilDate(now.minusMinutes(120)))
+      .withTimeRangeUpperBound(toUtilDate(now.minusMinutes(15)))
       .withTableName(tableName)
 
 
-    val now = LocalDate.now()
+    val now = LocalDateTime.now()
 
     configuration.tables.map {
        tableName =>
@@ -68,25 +69,12 @@ object Lambda extends Logging {
          logger.info(s"Total backup count for table: $latestBackupCount")
 
          if (latestBackupCount > daysToBackup) {
-           def processLastArn(lastBackupArn: String, backupResult: ListBackupsResult, deletedCount: Int): Int = {
-               val backupSummaries = backupResult.getBackupSummaries.asScala
-               backupSummaries.foreach { record =>
-                 val backupArn = record.getBackupArn
-                 dynamoDBClient.deleteBackup(new DeleteBackupRequest().withBackupArn(backupArn))
-                 logger.info(s"Has deleted $backupArn")
-               }
-               val latestBackupResult = dynamoDBClient.listBackups(makeListBackupsRequest(tableName,now))
-               maybeEmptyString2Option(latestBackupResult.getLastEvaluatedBackupArn) match {
-                 case Some(latestArn) =>
-                   processLastArn(latestArn, latestBackupResult, deletedCount + 1)
-                 case None => deletedCount
-              }
-           }
-
-           val deleted = maybeEmptyString2Option(latestResponse.getLastEvaluatedBackupArn).map {
-             latestBackupArn => processLastArn(latestBackupArn, latestResponse, 0)
-           }.getOrElse(0)
-           logger.info(s"Deleted ${deleted} backups")
+             val backupSummaries = latestResponse.getBackupSummaries.asScala
+             backupSummaries.foreach { record =>
+               val backupArn = record.getBackupArn
+               dynamoDBClient.deleteBackup(new DeleteBackupRequest().withBackupArn(backupArn))
+             }
+           logger.info(s"Deleted ${latestBackupCount} backups")
          } else {
            logger.info(s"No recent backups to delte")
          }

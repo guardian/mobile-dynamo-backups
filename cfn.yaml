@@ -64,38 +64,38 @@ Resources:
               Action:
                 - dynamodb:*
               Resource: !Sub arn:aws:dynamodb:eu-west-1:201359054765:table/*
-        Lambda:
-          Type: AWS::Lambda::Function
-          Properties:
-            FunctionName: !Sub ${Stack}-${App}-${Stage}
-            Code:
-              S3Bucket:
-                Ref: DeployBucket
-              S3Key: !Sub ${Stack}/${Stage}/${App}/${App}.jar
-            Environment:
-              Variables:
-                App: !Ref App
-                Stack: !Ref Stack
-                Stage: !Ref Stage
+  Lambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub ${Stack}-${App}-${Stage}
+      Code:
+        S3Bucket:
+          Ref: DeployBucket
+        S3Key: !Sub ${Stack}/${Stage}/${App}/${App}.jar
+      Environment:
+        Variables:
+          App: !Ref App
+          Stack: !Ref Stack
+          Stage: !Ref Stage
 
-            Description: Send Goal Alert notifications
-            Handler: com.gu.mobile.dynamo.backup.Lambda::handler
-            MemorySize: 512
-            Role: !GetAtt ExecutionRole.Arn
-            Runtime: java8
-            Timeout: 60
-        EventRule:
-          Type: AWS::Events::Rule
-          Properties:
-            ScheduleExpression: rate(10 minutes)
-            Targets:
-              - Id: !Sub MobileDynamoBackup${Stage}Target
-                Arn: !GetAtt Function.Arn
-        EventPermission:
-          Type: AWS::Lambda::Permission
-          Properties:
-            FunctionName: !GetAtt Function.Arn
-            Action: lambda:InvokeFunction
-            Principal: events.amazonaws.com
-            SourceArn: !GetAtt EventRule.Arn
+      Description: Send Goal Alert notifications
+      Handler: com.gu.mobile.dynamo.backup.Lambda::handler
+      MemorySize: 512
+      Role: !GetAtt ExecutionRole.Arn
+      Runtime: java8
+      Timeout: 60
+  EventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      ScheduleExpression: cron(16 45 * * ? *)
+      Targets:
+        - Id: !Sub MobileDynamoBackup${Stage}Target
+          Arn: !GetAtt Lambda.Arn
+  EventPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt Lambda.Arn
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt EventRule.Arn
 
