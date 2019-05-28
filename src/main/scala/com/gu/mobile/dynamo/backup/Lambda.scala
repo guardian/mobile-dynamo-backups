@@ -61,7 +61,7 @@ object Lambda extends Logging {
            .withTableName(tableName)
            .withBackupName(s"$tableName-backup-${now.format(formatter)}")
          val backupResponse = dynamoDBClient.createBackup(backupRequest)
-         logger.info(s"Backuo completed succesfully for table $tableName")
+         logger.info(s"Backup completed successfully for table $tableName")
 
          val latestResponse = dynamoDBClient.listBackups(makeListBackupsRequest(tableName,now))
 
