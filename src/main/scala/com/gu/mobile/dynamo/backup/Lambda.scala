@@ -33,7 +33,6 @@ object Lambda extends Logging {
   }
 
   val daysToBackup = configuration.daysToBackup
-  val daysToBackupLong = daysToBackup - 1
 
   val formatter = DateTimeFormatter.ofPattern("dd-MMM-yyyy")
 
@@ -46,10 +45,12 @@ object Lambda extends Logging {
       Date.from(localDate.atZone(ZoneId.systemDefault()).toInstant)
     }
 
-    def makeListBackupsRequest(tableName: String, now: LocalDateTime) = new ListBackupsRequest()
-      .withTimeRangeLowerBound(toUtilDate(now.minusDays(daysToBackupLong)))
-      .withTimeRangeUpperBound(toUtilDate(now.minusDays(daysToBackup)))
-      .withTableName(tableName)
+    def makeListBackupsRequest(tableName: String, now: LocalDateTime) =  {
+      new ListBackupsRequest()
+        .withTimeRangeUpperBound(toUtilDate(now.minusDays(daysToBackup)))
+        .withTimeRangeLowerBound(toUtilDate(now.minusDays(daysToBackup + 10)))
+        .withTableName(tableName)
+    }
 
 
     val now = LocalDateTime.now()
