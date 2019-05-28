@@ -19,7 +19,7 @@ Parameters:
   DeployBucket:
     Description: S3 Bucket where RiffRaff uploads artifacts on deploy
     Type: String
-    Default: content-api-dist
+    Default: mobile-dist
 
 Resources:
   ExecutionRole:
@@ -78,7 +78,7 @@ Resources:
           Stack: !Ref Stack
           Stage: !Ref Stage
 
-      Description: Send Goal Alert notifications
+      Description: Backs up a configured list of dynamo tables daily
       Handler: com.gu.mobile.dynamo.backup.Lambda::handler
       MemorySize: 512
       Role: !GetAtt ExecutionRole.Arn
@@ -87,7 +87,7 @@ Resources:
   EventRule:
     Type: AWS::Events::Rule
     Properties:
-      ScheduleExpression: cron(16 45 * * ? *)
+      ScheduleExpression: cron(0 2 * * ? *)
       Targets:
         - Id: !Sub MobileDynamoBackup${Stage}Target
           Arn: !GetAtt Lambda.Arn

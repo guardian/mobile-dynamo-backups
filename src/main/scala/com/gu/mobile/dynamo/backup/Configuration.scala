@@ -9,7 +9,7 @@ import collection.JavaConverters._
 
 class Configuration extends Logging {
 
-  val appName = "mobile-dynamo-backup"
+  val appName = Option(System.getenv("App")).getOrElse(sys.error("No app name set. Lambda will not run"))
 
   private val conf: Config = {
     val identity = AppIdentity.whoAmI(defaultAppName = appName)
