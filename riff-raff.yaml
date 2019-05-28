@@ -6,7 +6,7 @@ deployments:
     type: aws-lambda
     parameters:
       bucket: mobile-dist
-      functionNames: [mobile-dynamo-backup-]
+      functionNames: [mobile-dynamo-backups-]
       fileName: mobile-dynamo-backups.jar
       prefixStack: false
     dependencies: [mobile-dynamo-backups-cfn]
