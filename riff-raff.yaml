@@ -14,6 +14,6 @@ deployments:
     type: cloud-formation
     app: mobile-dynamo-backups
     parameters:
-      prependStackToCloudFormationStackName: false
+      prependStackToCloudFormationStackName: true
       cloudFormationStackName: mobile-dynamo-backups
       templatePath: cfn.yaml
