@@ -6,7 +6,7 @@ Parameters:
     Type: String
     Default: mobile
   App:
-    Description: the app nam e
+    Description: the app name
     Type: String
     Default: mobile-dynamo-backups
   Stage:
