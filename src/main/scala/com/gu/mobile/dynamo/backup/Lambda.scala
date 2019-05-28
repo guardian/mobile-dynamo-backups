@@ -45,7 +45,7 @@ object Lambda extends Logging {
       Date.from(localDate.atZone(ZoneId.systemDefault()).toInstant)
     }
 
-    def makeListBackupsRequest(tableName: String, now: LocalDateTime) =  {
+    def makeBackupsToDeleteListRequest(tableName: String, now: LocalDateTime) =  {
       new ListBackupsRequest()
         .withTimeRangeUpperBound(toUtilDate(now.minusDays(daysToBackup)))
         .withTimeRangeLowerBound(toUtilDate(now.minusDays(daysToBackup + 10)))
@@ -64,7 +64,7 @@ object Lambda extends Logging {
          val backupResponse = dynamoDBClient.createBackup(backupRequest)
          logger.info(s"Backup completed successfully for table $tableName")
 
-         val latestResponse = dynamoDBClient.listBackups(makeListBackupsRequest(tableName,now))
+         val latestResponse = dynamoDBClient.listBackups(makeBackupsToDeleteListRequest(tableName,now))
 
          val latestBackupCount = latestResponse.getBackupSummaries.size
          logger.info(s"Total backup count for table: $latestBackupCount")
