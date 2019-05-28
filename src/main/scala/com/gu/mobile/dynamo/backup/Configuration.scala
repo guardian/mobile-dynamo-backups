@@ -16,7 +16,7 @@ class Configuration extends Logging {
     logger.info(s"Trying $identity")
     ConfigurationLoader.load(identity = identity) {
       case AwsIdentity(_, stack, stage, _) =>
-        val path = s"/$appName/$stage/$stack"
+        val path = s"/$appName/$stack/$stage"
         logger.warn(s"Using path $path")
         SSMConfigurationLocation(path)
     }
