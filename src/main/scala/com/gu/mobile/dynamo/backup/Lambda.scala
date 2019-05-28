@@ -32,7 +32,7 @@ object Lambda extends Logging {
     new AmazonDynamoDBClient(credentials).withRegion(EU_WEST_1)
   }
 
-  val daysToBackup = configuration.daysToLookBackup
+  val daysToBackup = configuration.daysToBackup
   val daysToBackupLong = daysToBackup - 1
 
   val formatter = DateTimeFormatter.ofPattern("dd-MMM-yyyy")
