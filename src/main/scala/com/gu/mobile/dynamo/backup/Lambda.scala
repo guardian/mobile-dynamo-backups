@@ -47,8 +47,8 @@ object Lambda extends Logging {
     }
 
     def makeListBackupsRequest(tableName: String, now: LocalDateTime) = new ListBackupsRequest()
-      .withTimeRangeLowerBound(toUtilDate(now.minusMinutes(120)))
-      .withTimeRangeUpperBound(toUtilDate(now.minusMinutes(15)))
+      .withTimeRangeLowerBound(toUtilDate(now.minusDays(daysToBackupLong)))
+      .withTimeRangeUpperBound(toUtilDate(now.minusDays(daysToBackup)))
       .withTableName(tableName)
 
 
@@ -68,7 +68,7 @@ object Lambda extends Logging {
          val latestBackupCount = latestResponse.getBackupSummaries.size
          logger.info(s"Total backup count for table: $latestBackupCount")
 
-         if (latestBackupCount > daysToBackup) {
+         if (latestBackupCount > 0) {
              val backupSummaries = latestResponse.getBackupSummaries.asScala
              backupSummaries.foreach { record =>
                val backupArn = record.getBackupArn
