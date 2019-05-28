@@ -22,7 +22,8 @@ class Configuration extends Logging {
     }
   }
 
-  val tables: List[String] = conf.getStringList("tables").asScala.toList
+  //
+  val tables: List[String] = conf.getString("tables").split(",").toList
   val daysToLookBackup = conf.getInt("days")
 
 
