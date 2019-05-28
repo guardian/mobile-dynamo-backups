@@ -1,0 +1,101 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Lambda to perform scheduled backups of dynamo tables
+Parameters:
+  Stack:
+    Description: Stack name
+    Type: String
+    Default: mobile
+  App:
+    Description: the app name
+    Type: String
+    Default: mobile-dynamo-backups
+  Stage:
+    Description: Stage name
+    Type: String
+    AllowedValues:
+      - CODE
+      - PROD
+    Default: CODE
+  DeployBucket:
+    Description: S3 Bucket where RiffRaff uploads artifacts on deploy
+    Type: String
+    Default: mobile-dist
+
+Resources:
+  ExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: logs
+          PolicyDocument:
+            Statement:
+              Effect: Allow
+              Action:
+                - logs:CreateLogGroup
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+              Resource: arn:aws:logs:*:*:*
+        - PolicyName: lambda
+          PolicyDocument:
+            Statement:
+              Effect: Allow
+              Action:
+                - lambda:InvokeFunction
+              Resource: "*"
+        - PolicyName: ssmConfig
+          PolicyDocument:
+            Statement:
+              Effect: Allow
+              Action:
+                - ssm:GetParametersByPath
+              Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${App}/${Stage}/${Stack}
+        - PolicyName: dynamodb
+          PolicyDocument:
+            Statement:
+              Effect: Allow
+              Action:
+                - dynamodb:*
+              Resource: !Sub arn:aws:dynamodb:eu-west-1:201359054765:table/*
+  Lambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub ${App}-${Stage}
+      Code:
+        S3Bucket:
+          Ref: DeployBucket
+        S3Key: !Sub ${Stack}/${Stage}/${App}/${App}.jar
+      Environment:
+        Variables:
+          App: !Ref App
+          Stack: !Ref Stack
+          Stage: !Ref Stage
+
+      Description: Backs up a configured list of dynamo tables daily
+      Handler: com.gu.mobile.dynamo.backup.Lambda::handler
+      MemorySize: 512
+      Role: !GetAtt ExecutionRole.Arn
+      Runtime: java8
+      Timeout: 60
+  EventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      ScheduleExpression: cron(0 2 * * ? *)
+      Targets:
+        - Id: !Sub MobileDynamoBackup${Stage}Target
+          Arn: !GetAtt Lambda.Arn
+  EventPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt Lambda.Arn
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt EventRule.Arn
+

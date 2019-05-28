@@ -1,0 +1,19 @@
+stacks: [mobile]
+regions: [eu-west-1]
+
+deployments:
+  mobile-dynamo-backups:
+    type: aws-lambda
+    parameters:
+      bucket: mobile-dist
+      functionNames: [mobile-dynamo-backups-]
+      fileName: mobile-dynamo-backups.jar
+      prefixStack: false
+    dependencies: [mobile-dynamo-backups-cfn]
+  mobile-dynamo-backups-cfn:
+    type: cloud-formation
+    app: mobile-dynamo-backups
+    parameters:
+      prependStackToCloudFormationStackName: false
+      cloudFormationStackName: mobile-dynamo-backups
+      templatePath: cfn.yaml
