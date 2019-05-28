@@ -7,13 +7,13 @@ deployments:
     parameters:
       bucket: mobile-dist
       functionNames: [mobile-dynamo-backup-]
-      fileName: mobile-dynamo-backup.jar
+      fileName: mobile-dynamo-backups.jar
       prefixStack: false
     dependencies: [mobile-dynamo-backups-cfn]
   mobile-dynamo-backups-cfn:
     type: cloud-formation
-    app: mobile-dynamo-backup
+    app: mobile-dynamo-backups
     parameters:
-      prependStackToCloudFormationStackName: true
-      cloudFormationStackName: mobile-dynamo-backup
+      prependStackToCloudFormationStackName: false
+      cloudFormationStackName: mobile-dynamo-backups
       templatePath: cfn.yaml
